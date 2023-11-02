@@ -2,7 +2,7 @@
 
 # Maze
 class Maze
-  def initialize(width: 20, height: 15)
+  def initialize(width: 25, height: 20)
     @width = width
     @height = height
     @paths = ' ╹╺┗╻┃┏┣╸┛━┻┓┫┳╋'
@@ -26,8 +26,30 @@ class Maze
     puts "\n╭#{'─' * @width}╮"
     @maze.each { |row| puts "│#{row.map { |col| @paths[col.path] }.join}│" }
     puts "╰#{'─' * @width}╯"
-    # puts "\n"
+    puts "\n"
     # @maze.each{ |row| puts row.map{ |col| "[ #{col.path.to_s(2).rjust(4, "0")} ]" }.join }
+    w = @width - 1
+    @maze.each_with_index do |row, i| 
+      puts '┏' + row.map{ |col| "━━━#{col.east? ? "━" : "┳" }" }.join[0..-2] + '┓' if i == 0
+      puts '┃' + row.map{ |col| " • #{col.east? ? " " : "┃" }" }.join[0..-2] + '┃'
+      if i < @height - 1
+        line = ""
+        row.each_with_index do |col, j|
+          line += col.south? ? '┃   ' : '┣━━━' if j == 0
+          if j > 0 && j < @width
+            p = 15
+            p -= Node::NORTH if col.west?
+            p -= Node::EAST if col.south?
+            p -= Node::SOUTH if @maze[i+1][j].west?
+            p -= Node::WEST if row[j-1].south?
+            line += "#{@paths[p]}#{col.south? ? '   ' : '━━━'}"
+          end
+          line += col.south? ? '┃' : '┫' if j == w
+        end
+        puts line
+      end       
+      puts '┗' + row.map{ |col| "━━━#{col.east? ? "━" : "┻"}" }.join[0..-2] + '┛' if i == @height - 1
+    end
   end
 
   def neighbors(row, column)
@@ -99,8 +121,45 @@ class Node
   def unused?
     !used?
   end
+
+  def north?
+    path.to_s(2).rjust(4,'0')[3] == '1'
+  end
+  
+  def south? 
+    path.to_s(2).rjust(4,'0')[1] == '1'
+  end 
+  
+  def east?
+    path.to_s(2).rjust(4,'0')[2] == '1'
+  end 
+  
+  def west?
+    path.to_s(2).rjust(4,'0')[0] == '1'
+  end
 end
 
 maze = Maze.new
 maze.generate_maze
 maze.print_maze
+
+# 00000
+# 00000
+# 00000
+# 00000
+# 00000
+
+# Generate Full Maze Array
+#   Select Starting Node
+#   Loop:
+#     Find Neighbor(s)
+#     IF Neighbor(s) Exists?
+#       Randomly Select Neighbor
+#       Create Path to new node
+#       Remember previous node
+#     ELSIF Has previous node?
+#       Go to Previous
+#     ELSE
+#       Exit Loop
+#   Indicate Percentage Completed
+# Print Maze
